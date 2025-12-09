@@ -124,16 +124,26 @@ export const AuthService = {
   },
 
   // Logout user
-  async logout() {
-    try {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
-      return { success: true };
-    } catch (error) {
-      console.error('Logout error:', error);
-      return { success: false };
-    }
-  },
+async logout() {
+  try {
+    // Clear all authentication data
+    await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('userData');
+    await AsyncStorage.removeItem('rememberMe');
+    
+    // Return success
+    return { 
+      success: true, 
+      message: 'Logged out successfully' 
+    };
+  } catch (error) {
+    console.error('Logout error:', error);
+    return { 
+      success: false, 
+      message: 'Failed to logout' 
+    };
+  }
+},
 
   // Forgot password
   async forgotPassword(email) {

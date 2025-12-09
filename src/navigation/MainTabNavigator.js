@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import screens
 import HomeScreen from '../screens/HomeScreen';
@@ -9,9 +10,14 @@ import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
-const Tab = createBottomTabNavigator();
 
-export default function MainTabNavigator({ route, navigation }) {
+
+export default function MainTabNavigator({ route, navigation, onLogout }) {
+  
+  const Tab = createBottomTabNavigator();
+  const { logout } = useAuth();
+
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -65,9 +71,10 @@ export default function MainTabNavigator({ route, navigation }) {
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreen}
         options={{ title: 'Profile' }}
-      />
+      >
+        {(props) => <ProfileScreen {...props} onLogout={logout} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }

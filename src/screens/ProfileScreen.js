@@ -10,8 +10,10 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
+  const { user, logout, loading, clearAllData } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
@@ -26,33 +28,55 @@ export default function ProfileScreen({ navigation }) {
     { icon: 'information-circle-outline', label: 'About App', color: '#795548' },
   ];
 
-// In the ProfileScreen component, update the handleLogout function:
-const handleLogout = () => {
-  Alert.alert(
-    'Logout',
-    'Are you sure you want to logout?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Logout', 
-        style: 'destructive',
-        onPress: async () => {
-          // Call the logout function from props
-          if (route.params?.onLogout) {
-            route.params.onLogout();
+  const handleLogout = async () => {
+    try {
+      console.log('Logout button pressed');
+      await logout();
+      console.log('Logout completed');
+      // The AppNavigator will automatically redirect to login screen
+      // because isAuthenticated state will be false
+    } catch (error) {
+      console.error('Logout failed:', error);
+      Alert.alert('Logout Failed', 'Please try again.');
+    }
+  };
+
+  const confirmLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Logout cancelled')
+        },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: handleLogout
+        },
+      ]
+    );
+  };
+
+  // For development only - clear all data
+  const handleClearData = () => {
+    Alert.alert(
+      'Clear All Data',
+      'WARNING: This will delete all app data including accounts. For development only!',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Clear Data', 
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllData();
           }
-          
-          // Or use the AuthService directly
-          // await AuthService.logout();
-          // navigation.reset({
-          //   index: 0,
-          //   routes: [{ name: 'Login' }],
-          // });
-        }
-      },
-    ]
-  );
-};
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -60,7 +84,7 @@ const handleLogout = () => {
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
           <Image
-            source={{ uri: 'https://via.placeholder.com/100' }}
+            source={{ uri: user?.avatar || 'https://via.placeholder.com/150' }}
             style={styles.avatar}
           />
           <TouchableOpacity style={styles.editAvatarButton}>
@@ -68,9 +92,9 @@ const handleLogout = () => {
           </TouchableOpacity>
         </View>
         
-        <Text style={styles.userName}>John Doe</Text>
-        <Text style={styles.userEmail}>john.doe@rmbbusiness.com</Text>
-        <Text style={styles.userRole}>Business Owner</Text>
+        <Text style={styles.userName}>{user?.name || 'Demo User'}</Text>
+        <Text style={styles.userEmail}>{user?.email || 'demo@rmbbusiness.com'}</Text>
+        <Text style={styles.userRole}>{user?.businessName || 'RMB Demo Business'}</Text>
         
         <TouchableOpacity style={styles.editProfileButton}>
           <Ionicons name="create-outline" size={18} color="#007AFF" />
@@ -149,13 +173,32 @@ const handleLogout = () => {
       </View>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <TouchableOpacity 
+        style={[styles.logoutButton, loading && styles.logoutButtonDisabled]} 
+        onPress={confirmLogout}
+        disabled={loading}
+      >
         <Ionicons name="log-out-outline" size={22} color="#F44336" />
-        <Text style={styles.logoutText}>Logout</Text>
+        <Text style={styles.logoutText}>
+          {loading ? 'Logging out...' : 'Logout'}
+        </Text>
       </TouchableOpacity>
+
+      {/* Development Only: Clear Data Button */}
+      {__DEV__ && (
+        <TouchableOpacity 
+          style={styles.clearDataButton}
+          onPress={handleClearData}
+        >
+          <Ionicons name="trash-outline" size={18} color="#999" />
+          <Text style={styles.clearDataText}>Clear All Data (Dev Only)</Text>
+        </TouchableOpacity>
+      )}
 
       {/* App Version */}
       <Text style={styles.versionText}>RMB Business App v1.0.0</Text>
+      <Text style={styles.debugText}>User: {user?.email || 'No user'}</Text>
+      <Text style={styles.debugText}>Logged in: {user ? 'Yes' : 'No'}</Text>
     </ScrollView>
   );
 }
@@ -339,7 +382,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff',
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 10,
     padding: 18,
     borderRadius: 12,
     shadowColor: '#000',
@@ -348,16 +391,43 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  logoutButtonDisabled: {
+    opacity: 0.5,
+  },
   logoutText: {
     color: '#F44336',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 10,
   },
+  clearDataButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  clearDataText: {
+    color: '#999',
+    fontSize: 12,
+    marginLeft: 8,
+    fontStyle: 'italic',
+  },
   versionText: {
     textAlign: 'center',
     color: '#999',
     fontSize: 12,
-    marginBottom: 30,
+    marginBottom: 10,
+  },
+  debugText: {
+    textAlign: 'center',
+    color: '#ccc',
+    fontSize: 10,
+    marginBottom: 5,
   },
 });

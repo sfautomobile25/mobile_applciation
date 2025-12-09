@@ -9,8 +9,12 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function HomeScreen({ navigation }) {
+
+  const { user } = useAuth();
+
   const quickActions = [
     { icon: 'add-circle', label: 'Add Product', color: '#4CAF50' },
     { icon: 'cart', label: 'New Order', color: '#FF9800' },
@@ -35,7 +39,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Good morning,</Text>
-          <Text style={styles.userName}>John Doe</Text>
+<Text style={styles.userName}>{user?.name?.split(' ')[0] || 'User'}</Text>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="#333" />
