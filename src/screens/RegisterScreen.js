@@ -14,6 +14,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { validateForm } from '../utils/validation';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -89,55 +90,40 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
-    console.log('Register function called');
+  console.log('Register function called');
+  
+  // Validate all fields
+  const validationErrors = validateForm(formData, 'register');
+  
+  if (!formData.acceptTerms) {
+    validationErrors.acceptTerms = 'You must accept the terms and conditions';
+  }
+
+  if (Object.keys(validationErrors).length > 0) {
+    console.log('Validation errors:', validationErrors);
+    setErrors(validationErrors);
+    return;
+  }
+
+  console.log('Starting registration process...');
+  setIsLoading(true);
+
+  try {
+    console.log('Simulating API call...');
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Validate all fields
-    const validationErrors = validateForm(formData, 'register');
-    
-    if (!formData.acceptTerms) {
-      validationErrors.acceptTerms = 'You must accept the terms and conditions';
-    }
-
-    if (Object.keys(validationErrors).length > 0) {
-      console.log('Validation errors:', validationErrors);
-      setErrors(validationErrors);
-      return;
-    }
-
-    console.log('Starting registration process...');
-    setIsLoading(true);
-
-    try {
-      console.log('Simulating API call...');
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Registration successful, showing alert...');
-      // For demo, always succeed
-      Alert.alert(
-        'Success!',
-        'Account created successfully. You can now login.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-                // Use navigation.navigate with params
-                navigation.navigate('Login', { 
-                registeredEmail: formData.email,
-                showSuccessMessage: true 
-                });
-            },
-          },
-        ]
-      );
-    } catch (error) {
-      console.error('Registration error:', error);
-      Alert.alert('Error', 'Registration failed. Please try again.');
-    } finally {
-      console.log('Setting loading to false');
-      setIsLoading(false);
-    }
-  };
+    console.log('Registration successful');
+    // Navigate back to login
+    navigation.goBack();
+  } catch (error) {
+    console.error('Registration error:', error);
+    Alert.alert('Error', 'Registration failed. Please try again.');
+  } finally {
+    console.log('Setting loading to false');
+    setIsLoading(false);
+  }
+};
 
   const renderStepIndicator = () => {
     return (
